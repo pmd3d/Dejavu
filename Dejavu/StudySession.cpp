@@ -1,4 +1,4 @@
-#include "..\Dejavu\Dejavu.h"
+#include "Dejavu.h"
 
 using namespace jlimdev;
 

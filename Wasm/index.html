@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Jonathan Lim - C++ and Javascript demo - Flashcards</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">French Flashcards</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="reset">Reset</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="load">Load</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" download="vocab.json" id="vocabdown">Download</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="audiolink">Enable Audio (experimental)</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <div class="container" id="welcome">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2>Welcome</h2>
+        <h2>to my C++ Demo</h2>
+        <p>I ported a flashcard review scheduler to C++ and then cross compiled it to web assembly for this web page.
+          The scheduler uses SuperMemo2 technology. Notice of use: Algorithm SM-2, Copyright SuperMemo World, 1991. 
+          <a href="https://www.supermemo.com">https://www.supermemo.com</a> 
+          <a href="https://www.supermemo.eu">https://www.supermemo.eu</a>
+          The original C# code for the scheduler has an MIT license as is hosted on <a href="https://github.com/helephant/SpacedRepetition.Net">github</a>.
+          This is an exercise in C++ and for French vocabulary building. The interface uses vanilla javascript and bootstrap.
+        </p>
+        <button type="button" class="btn btn-primary btn-lg btn-block" id="demo">Start Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flashcard Content -->
+  <div class="container d-none" id="work">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2 id="French"></h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h2 id="English"></h2>
+      </div>
+    </div>
+    <div class="row" id="turnrow">
+      <button type="button" class="btn btn-primary btn-block" id="turnover">Turnover &amp; Rate</button>
+    </div>
+    <div class="row d-none" id="raterow">
+      <div class="col-4">
+        <button type="button" class="btn btn-primary btn-lg" id="rate-1">Dunno</button>
+      </div>
+      <div class="col-4 text-center">
+        <button type="button" class="btn btn-primary btn-lg" id="rate-2">Hesitate</button>
+      </div>
+      <div class="col-4 text-right">
+        <button type="button" class="btn btn-primary btn-lg" id="rate-3">Ok</button>
+      </div>
+    </div>
+  </div>
+  
+  <input style="display:none" type="file" id="files" name="files[]" />
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.slim.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Check for the various File API support.
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+      // Great success! All the File APIs are supported.
+    } else {
+      alert('The File APIs are not fully supported in this browser.');
+    }
+  </script>
+
+  <script>
+    var globalFlashcardInput = "";
+    var globalAudioToggle = false;
+    var audioCard = null;
+    var globalCardIndex = 0;
+    var globalCardShowState = 0;
+
+    function handleFileSelect(evt) {
+      var files = evt.target.files; // FileList object
+
+      // Loop through the FileList and render image files as thumbnails.
+      for (var i = 0, f; f = files[i]; i++) {
+
+        var reader = new FileReader();
+
+        // Closure to capture the file information.
+        reader.onload = (function(theFile) {
+          return function(e) {
+            globalFlashcardInput = JSON.parse(e.target.result);
+            beginSession();
+          };
+        })(f);
+
+        // Read in the image file as a data URL.
+        reader.readAsText(f);
+      }
+    }
+
+    function setFlashCardData(language) {
+      var text = globalFlashcardInput[globalCardIndex]["Item"][language];
+
+      document.getElementById(language).innerText = text;
+
+      if (language === "French") {
+        document.getElementById("English").innerText = "";
+        if (globalAudioToggle) {
+          audioCard.say(text);
+        }
+      }
+    }
+
+    function rate(outcome) {
+      document.getElementById("raterow").classList.add("d-none");
+      document.getElementById("turnrow").classList.remove("d-none");
+      globalCardIndex = (globalCardIndex + 1) % globalFlashcardInput.length;
+      setFlashCardData("French");
+    }
+
+    function beginSession() {
+      document.getElementById("welcome").classList.add("d-none"); 
+      document.getElementById("work").classList.remove("d-none");
+      globalCardIndex = 0; 
+      setFlashCardData("French");
+    }
+
+    function turnover(ev) {
+      setFlashCardData("English");
+      document.getElementById("turnrow").classList.add("d-none");
+      document.getElementById("raterow").classList.remove("d-none");
+    }
+
+    class AudioCard {
+      init() {
+        if (!('speechSynthesis' in window)) {
+          alert("audio speech not available")
+        } else {
+          speechSynthesis.onvoiceschanged = () => {
+            this._voice = this.getVoice(speechSynthesis.getVoices());
+          }
+        }
+        this._voice = this.getVoice(speechSynthesis.getVoices());
+      }
+
+      getVoice(voices) {
+        this._hasSpeechSynthesis = true;
+
+        // In Chrome?
+        let voice = speechSynthesis.getVoices().filter((voice) => voice.name === 'Google français')[0];
+        if (voice) return voice;
+        // On a Mac?
+        voice = speechSynthesis.getVoices().filter((voice) => voice.name === 'Thomas')[0];
+        if (voice) return voice;
+        voice = speechSynthesis.getVoices().filter((voice) => voice.name === 'Amelie')[0];
+        if (voice) return voice;
+
+        this._hasSpeechSynthesis = false;
+      }
+
+      say(text) {
+        if (!this._voice) {
+          return;
+        }
+        var msg = new SpeechSynthesisUtterance();
+        msg.text = text;
+        msg.lang = 'fr';
+        msg.voice = this._voice;
+        window.speechSynthesis.speak(msg);
+      }      
+    }
+
+    document.getElementById("vocabdown").addEventListener("click",
+      function(ev) {
+        this.href = 
+          window.URL.createObjectURL(
+          new Blob([globalFlashcardInput], { type: "text/plain" })
+        );
+      });
+
+    document.getElementById("reset").addEventListener("click", 
+      function(ev) {
+        location.reload();
+      });
+
+    document.getElementById('files').addEventListener("change", 
+      handleFileSelect, false);
+
+    document.getElementById('load').addEventListener("click", 
+      function(ev) {
+        document.getElementById('files').click();
+      });
+      
+    document.getElementById("audiolink").addEventListener("click", 
+      function(ev) {
+        globalAudioToggle = !globalAudioToggle;
+        if (globalAudioToggle) {
+          this.innerText = "Disable Audio (experimental)";
+
+          if (audioCard === null) {
+            audioCard = new AudioCard();
+            audioCard.init();            
+            setTimeout(function() {
+              audioCard.say("activé");
+            }, 1000);         
+          }
+          else {
+            audioCard.say("activé");
+          }
+        }
+        else
+          this.innerText = "Enable Audio (experimental)";
+      });
+
+    document.getElementById("demo").addEventListener("click",
+      function(ev) {
+        globalFlashcardInput = JSON.parse('[ { "Status": "NeverReviewed", "Item": { "French": "Nous avons vu la pleine puissance de l’outil digital", "English": "We have seen the full power of the digital tool" } }, { "Status": "NeverReviewed", "Item": { "French": "Google Pixel 5: moins haut de gamme, plus abordable", "English": "Google Pixel 5: less upscale, more affordable" } }, { "Status": "NeverReviewed", "Item": { "French": "Je vais très bien", "English": "I am doing well" } } ]');
+        beginSession();
+    });
+
+    document.getElementById("turnover").addEventListener("click", turnover);
+    
+    document.getElementById("rate-1").addEventListener("click",
+      function(ev) {        
+        rate(1);
+      });
+    document.getElementById("rate-2").addEventListener("click",
+      function(ev) {
+        rate(2);
+      });
+    document.getElementById("rate-3").addEventListener("click",
+      function(ev) {
+        rate(3);
+      });
+
+      document.addEventListener('keydown', 
+        function (ev) {
+          if (!document.getElementById("turnrow").classList.contains("d-none")) {
+            switch (ev.key) {
+              case "Enter" : turnover(); break;
+            }
+          }
+          else if (!document.getElementById("raterow").classList.contains("d-none")) {
+            switch (ev.key) {
+              case "1" : rate(1); break;
+              case "2" : rate(2); break;
+              case "3" : rate(3); break;
+            }
+          }
+        });
+  </script> 
+</body>
+
+</html>

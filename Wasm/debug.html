@@ -195,26 +195,38 @@
 
                 // Call C from JavaScript
                 for (var i = 0; i < globalFlashcardInput.length; i++) {
-                    var item = globalFlashcardInput[i]["Status"][1];
 
-                    switch (globalFlashcardInput[i]["Status"][0]) {
-                        case "PreviouslyCorrect" :
-                            var reviewDate = Date.parse("item['ReviewDate']");
-                            var previousCorrectDate = Date.parse(item["PreviousCorrectDate"]);
-                            Module.ccall("AddPreviouslyCorrect", "void", ["number", "number", "number"], [ item["DifficultyRating"][1], reviewDate, previousCorrectDate ]);
-                            break;
-                        case "PreviouslyIncorrect" :
-                            var reviewDate = Date.parse("item['ReviewDate']");
-                            Module.ccall("AddPreviouslyIncorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
-                            break;
-                        case "PreviouslyFirstCorrect" :
-                            var reviewDate = Date.parse("item['ReviewDate']");
-                            Module.ccall("AddPreviouslyFirstCorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
-                            break;
-                        case "NeverReviewed" :
-                            Module.ccall("AddNeverReviewedCard", "void", [], []);
-                            break;
+                    if (globalFlashcardInput[i]["Status"] == "NeverReviewed") {
+                        Module.ccall("AddNeverReviewedCard", "void", [], []);
                     }
+                    else {
+                        var item = globalFlashcardInput[i]["Status"][1];
+
+                        switch (globalFlashcardInput[i]["Status"][0]) {
+                            case "PreviouslyCorrect" :
+                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                var previousCorrectDate = Date.parse(item["PreviousCorrectDate"]) / 1000;
+                                Module.ccall("AddPreviouslyCorrect", "void", ["number", "number", "number"], [ item["DifficultyRating"][1], reviewDate, previousCorrectDate ]);
+                                break;
+                            case "PreviouslyIncorrect" :
+                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                Module.ccall("AddPreviouslyIncorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
+                                break;
+                            case "PreviouslyFirstCorrect" :
+                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                Module.ccall("AddPreviouslyFirstCorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
+                                break;
+                        }
+                    }
+                }
+
+                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                    console.log("downloading " + i);
+                    // -- update the c++ data...
+                    Module.ccall('Download',
+                        'number', // return type
+                        ['number'], // argument types
+                        [i]); // arguments
                 }
 
                 var index = Module.ccall('Next',
@@ -236,62 +248,84 @@
 
                 console.log('index ' + index + ' hesitate setting...');
 
-                let outcome = 2;
-
                 var _ = Module.ccall('SetOutcome',
                     'number',
                     ['number', 'number', 'number'],
-                    [index, 2, now]);
-                
-                // -- combine this with download to form an update state...
-                if (outcome === 1) {
-                    // -- mark as incorrect...
-                    globalFlashcardInput[index]["Status"][0] = "PreviouslyIncorrect";
-                }
-                else {
-                    // -- progress through correct states...
-                    switch (globalFlashcardInput[index]["Status"][0]) {
-                        case "NeverReviewed" :
-                        case "PreviouslyIncorrect" :
-                            globalFlashcardInput[index]["Status"][0] = "PreviouslyFirstCorrect";
-                            break;
-                        case "PreviouslyFirstCorrect" :
-                        case "PreviouslyCorrect" :
-                            globalFlashcardInput[index]["Status"][0] = "PreviouslyCorrect";
-                            break;
-                    }
-                }
-
-                // -- update the c++ data...
-                Module.ccall('Download',
-                    'number', // return type
-                    ['number'], // argument types
-                    [index]); // arguments
+                    [index, 2, now]);                    
 
                 index = Module.ccall('Next',
                     'number', // return type
                     ['number'], // argument types
                     [now]); // arguments
 
-                console.log('index ' + index + ' done, download...');
+                console.log('index ' + index + ' end of session...');
+
+                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                    console.log("downloading " + i);
+                    // -- update the c++ data...
+                    Module.ccall('Download',
+                        'number', // return type
+                        ['number'], // argument types
+                        [i]); // arguments
+                }
+
+                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                    console.log('getting reporting' + i);
+                    Module.ccall('GetNextTime',
+                        'void',
+                        ['number', 'number'],
+                        [i, now]);
+                }
+
+                console.log('done');
 
             }
 
-            function cppAdd(i, correctReviewStreak, difficultyRating, reviewDate, previousCorrectReview) {
+            function cppAddNeverReviewed(i) {
+                console.log("cpp callback never reviewed");
+                globalFlashcardInput[i]["Status"] = "Never Reviewed";
+            }
+
+            function cppAddPreviouslyIncorrect(i, difficultyRating, reviewDate) {
+                console.log("cpp callback previously incorrect");
+
                 var item = {};
 
+                globalFlashcardInput[i]["Status"] = "PreviouslyIncorrect";
                 item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
                 item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
-                switch (globalFlashcardInput[i]["Status"][0]) {
-                    case "PreviouslyCorrect" :
-                        item.previousCorrectDate = JSON.stringify(new Date(previousCorrectDate * 1000));
-                        break;
-                    case "NeverReviewed" :
-                        console.log("this should not happen since should update when reviewed");
-                        break;
-                }
                 globalFlashcardInput[i]["Status"][1] = item;
             }
+
+            function cppAddPreviouslyFirstCorrect(i,  difficultyRating, reviewDate) {
+                console.log("cpp callback previously first correct");
+
+                var item = {};
+
+                globalFlashcardInput[i]["Status"] = "PreviouslyFirstCorrect";
+                item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
+                item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
+                globalFlashcardInput[i]["Status"][1] = item;
+            }
+
+            function cppAddPreviouslyCorrect(i, difficultyRating, reviewDate, previousCorrectDate) {
+                console.log("cpp callback previously correct");
+
+                var item = {};
+
+                globalFlashcardInput[i]["Status"] = "PreviouslyCorrect";
+                item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
+                item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
+                item.previousCorrectDate = JSON.stringify(new Date(previousCorrectDate * 1000));
+                globalFlashcardInput[i]["Status"][1] = item;
+            }
+
+            function cppGetNextTime(i, reviewDate) {
+                var d = new Date(reviewDate * 1000);
+                var timestamp = JSON.stringify(d);
+                console.log("next time = " + i + " " + d.toString());
+            }
+            
         </script>
     </body>
     </html>
