@@ -27,7 +27,7 @@ StudySession& session() noexcept {
 
 struct DownloadHelper
 {
-    int i;
+    uint i;
 
     void operator()(NeverReviewed nr)
     {
@@ -88,6 +88,37 @@ struct DownloadHelper
     }
 };
 
+void ConvertDifficultyRatingAndReviewDate(int difficultyRatingJs, i64 reviewDateJs,
+    DifficultyRating& difficultyRating, Timestamp& reviewDate)
+{    
+    if (difficultyRatingJs < 0 ||
+        difficultyRatingJs > 100)
+        exit(2);
+
+    if (reviewDateJs < 0)
+        exit(3);
+
+    reviewDate = static_cast<Timestamp>(reviewDateJs);
+    difficultyRating = static_cast<uint>(difficultyRatingJs);
+}
+
+uint ConvertNow(i64 nowJs)
+{
+    if (nowJs < 0 || nowJs > UINT32_MAX)
+        exit(1);
+
+    return static_cast<uint>(nowJs);
+}
+
+uint ConvertIndex(int iJs)
+{
+    if (iJs < 0 || iJs > maxCards)
+        exit(1);
+
+    return static_cast<uint>(iJs);
+}
+
+
 extern "C" {
 
     void AddNeverReviewedCard()
@@ -95,34 +126,48 @@ extern "C" {
         session().AddNeverReviewed();
     }
 
-    void AddPreviouslyIncorrect(int difficultyRating, int reviewDate)
+    void AddPreviouslyIncorrect(int difficultyRatingJs, i64 reviewDateJs)
     {
-        if (difficultyRating < 0 || reviewDate < 0)
-            exit(1);
+        Timestamp reviewDate;
+        DifficultyRating difficultyRating;
+
+        ConvertDifficultyRatingAndReviewDate(difficultyRatingJs, reviewDateJs,
+            difficultyRating, reviewDate);
 
         session().AddPreviouslyIncorrect(difficultyRating, reviewDate);
     }
 
-    void AddPreviouslyFirstCorrect(int difficultyRating, int reviewDate)
+    void AddPreviouslyFirstCorrect(int difficultyRatingJs, i64 reviewDateJs)
     {
-        if (difficultyRating < 0 || reviewDate < 0)
-            exit(1);
+        Timestamp reviewDate;
+        uint difficultyRating;
+
+        ConvertDifficultyRatingAndReviewDate(difficultyRatingJs, reviewDateJs,
+            difficultyRating, reviewDate);
 
         session().AddPreviouslyFirstCorrect(difficultyRating, reviewDate);
     }
 
-    void AddPreviouslyCorrect(int difficultyRating, int reviewDate, int previousCorrectReview)
+    void AddPreviouslyCorrect(int difficultyRatingJs, i64 reviewDateJs, i64 previousCorrectReviewJs)
     {
-        if (difficultyRating < 0 || reviewDate < 0 || previousCorrectReview < 0)
+        if (previousCorrectReviewJs < 0)
             exit(1);
+
+        Timestamp reviewDate;
+        uint difficultyRating;
+
+        ConvertDifficultyRatingAndReviewDate(difficultyRatingJs, reviewDateJs,
+            difficultyRating, reviewDate);
+
+        Timestamp previousCorrectReview = static_cast<Timestamp>(previousCorrectReviewJs);
 
         session().AddPreviouslyCorrect(difficultyRating, reviewDate, previousCorrectReview);
     }
 
-    void SetOutcome(int i, uint userState, uint now)
+    void SetOutcome(int iJs, int userState, i64 nowJs)
     {
-        if (i < 0)
-            exit(1);
+        uint i = ConvertIndex(iJs);
+        uint now = ConvertNow(nowJs);
 
         ReviewOutcome outcome = ReviewOutcome::Incorrect;
 
@@ -152,26 +197,24 @@ extern "C" {
         session().UpdateCard(i, outcome, now);
     }
 
-    int Next(int now)
+    int Next(i64 nowJs)
     {
-        if (now < 0)
-            exit(1);
+        uint now = ConvertNow(nowJs);
 
         return session().NextReview(now).value_or(-1);
     }
 
-    void Download(int i)
+    void Download(int iJs)
     {
-        if (i < 0)
-            exit(1);
+        uint i = ConvertIndex(iJs);
 
         std::visit(DownloadHelper{ i }, session().At(i));
     }
 
-    void GetNextTime(int i, uint now)
+    void GetNextTime(int iJs, i64 nowJs)
     {
-        if (i < 0 || now < 0)
-            exit(1);
+        uint i = ConvertIndex(iJs);
+        uint now = ConvertNow(nowJs);
 
         auto time = session().GetNextReviewTime(i, now);
 

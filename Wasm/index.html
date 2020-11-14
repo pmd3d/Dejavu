@@ -12,7 +12,14 @@
 
   <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
+  <style>
+  .bg-text {
+    background-color: #f1f8ff;
+  }
+  .list-group-item {
+    background-color: #00000008;
+  }
+  </style>
 </head>
 
 <body>
@@ -20,7 +27,6 @@
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
     <div class="container">
-      <a class="navbar-brand" href="#">French Flashcards</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -45,10 +51,12 @@
 
   <!-- Page Content -->
   <div class="container" id="welcome">
-    <div class="row">
-      <div class="col-lg-12 text-center">
+    <div class="card mb-4 text-center">
+      <div class="text-center card-header">
         <h2>Welcome</h2>
         <h2>to my C++ Demo</h2>
+      </div>
+      <div class="card-header">
         <p>I ported a flashcard review scheduler to C++ and then cross compiled it to web assembly for this web page.
           The scheduler uses SuperMemo2 technology. Notice of use: Algorithm SM-2, Copyright SuperMemo World, 1991. 
           <a href="https://www.supermemo.com">https://www.supermemo.com</a> 
@@ -56,35 +64,41 @@
           The original C# code for the scheduler has an MIT license as is hosted on <a href="https://github.com/helephant/SpacedRepetition.Net">github</a>.
           This is an exercise in C++ and for French vocabulary building. The interface uses vanilla javascript and bootstrap.
         </p>
-        <button type="button" class="btn btn-primary btn-lg btn-block" id="demo">Start Demo</button>
       </div>
     </div>
+    <button type="button" class="btn btn-primary btn-lg btn-block" id="demo">Start Demo</button>
   </div>
 
   <!-- Flashcard Content -->
   <div class="container d-none" id="work">
-    <div class="row">
-      <div class="col-lg-12 text-center">
-        <h2 id="French"></h2>
+    <div class="card mb-4 shadow-sm">
+      <div class="text-center bg-text">
+        <p id="French"></p> 
       </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-12 text-center">
-        <h2 id="English"></h2>
+      <div class="text-center card-header" id="englishrow">
+        <p id="English"></p>
       </div>
-    </div>
-    <div class="row" id="turnrow">
-      <button type="button" class="btn btn-primary btn-block" id="turnover">Turnover &amp; Rate</button>
-    </div>
-    <div class="row d-none" id="raterow">
-      <div class="col-4">
-        <button type="button" class="btn btn-primary btn-lg" id="rate-1">Dunno</button>
-      </div>
-      <div class="col-4 text-center">
-        <button type="button" class="btn btn-primary btn-lg" id="rate-2">Hesitate</button>
-      </div>
-      <div class="col-4 text-right">
-        <button type="button" class="btn btn-primary btn-lg" id="rate-3">Ok</button>
+      <div class="card-header text-center">
+        <div id="turnrow">
+          <ul>
+            <li class="list-group-item justify-content-between lh-condensed">
+              <a href="#" id="turnover">Turnover &amp; Rate</a>
+            </li>
+          </ul>
+        </div>
+        <div class="d-none" id="raterow">
+          <ul>
+            <li class="list-group-item justify-content-between lh-condensed">
+              <a href="#" id="rate-1">Dunno</a>
+            </li>
+            <li class="list-group-item justify-content-between lh-condensed">
+              <a href="#" id="rate-2">Hesitate</a>
+            </li>
+            <li class="list-group-item justify-content-between lh-condensed">
+              <a href="#" id="rate-3">Ok</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -148,6 +162,8 @@
     function rate(outcome) {
       document.getElementById("raterow").classList.add("d-none");
       document.getElementById("turnrow").classList.remove("d-none");
+      document.getElementById("englishrow").classList.remove("bg-text");
+      document.getElementById("englishrow").classList.add("card-header");
       globalCardIndex = (globalCardIndex + 1) % globalFlashcardInput.length;
       setFlashCardData("French");
     }
@@ -162,6 +178,8 @@
     function turnover(ev) {
       setFlashCardData("English");
       document.getElementById("turnrow").classList.add("d-none");
+      document.getElementById("englishrow").classList.add("bg-text");
+      document.getElementById("englishrow").classList.remove("card-header");
       document.getElementById("raterow").classList.remove("d-none");
     }
 

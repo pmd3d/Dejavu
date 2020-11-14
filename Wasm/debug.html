@@ -148,7 +148,7 @@
                     preRun: [],
                     postRun: [],
                     print: function() {
-                        var e = document.getElementById("output");
+                        let e = document.getElementById("output");
                         return e && (e.value = ""),
                             function(t) {
                                 arguments.length > 1 && (t = Array.prototype.slice.call(arguments).join(" ")), console.log(t), e && (e.value += t + "\n", e.scrollTop = e.scrollHeight)
@@ -162,7 +162,7 @@
                                 time: Date.now(),
                                 text: ""
                             }), e !== Module.setStatus.last.text) {
-                            var t = e.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/),
+                            let t = e.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/),
                                 n = Date.now();
                             t && n - Module.setStatus.last.time < 30 || (Module.setStatus.last.time = n, Module.setStatus.last.text = e, t ? (e = t[1], progressElement.value = 100 * parseInt(t[2]), progressElement.max = 100 * parseInt(t[4]), progressElement.hidden = !1, spinnerElement.hidden = !1) : (progressElement.value = null, progressElement.max = null, progressElement.hidden = !0, e || (spinnerElement.style.display = "none")), statusElement.innerHTML = e)
                         }
@@ -180,47 +180,50 @@
         </script>
         <script async src=flashcard.js></script>
         <script>
+            'use strict';
+
             // -- testing...
-            globalFlashcardInput = JSON.parse('[ { "Status": [ "PreviouslyCorrect", { "ReviewDate": "2020-10-02T16:20:47.5601239Z", "PreviousCorrectDate": "2020-09-26T04:47:56.5663265Z", "DifficultyRating": [ "DifficultyRating", 91 ] } ], "Item": { "French": "Nous avons vu la pleine puissance de l’outil digital", "English": "We have seen the full power of the digital tool" } }, { "Status": [ "PreviouslyIncorrect", { "ReviewDate": "2020-10-02T16:20:56.0262559Z", "DifficultyRating": ["DifficultyRating", 100 ] } ], "Item": { "French": "Google Pixel 5: moins haut de gamme, plus abordable", "English": "Google Pixel 5: less upscale, more affordable" } }, { "Status": "NeverReviewed", "Item": { "French": "Je vais très bien", "English": "I am doing well" } } ]');
+            let globalFlashcardInput = JSON.parse('[ { "Status": [ "PreviouslyCorrect", { "ReviewDate": "2020-10-02T16:20:47.5601239Z", "PreviousCorrectDate": "2020-09-26T04:47:56.5663265Z", "DifficultyRating": [ "DifficultyRating", 91 ] } ], "Item": { "French": "Nous avons vu la pleine puissance de l’outil digital", "English": "We have seen the full power of the digital tool" } }, { "Status": [ "PreviouslyIncorrect", { "ReviewDate": "2020-10-02T16:20:56.0262559Z", "DifficultyRating": ["DifficultyRating", 100 ] } ], "Item": { "French": "Google Pixel 5: moins haut de gamme, plus abordable", "English": "Google Pixel 5: less upscale, more affordable" } }, { "Status": "NeverReviewed", "Item": { "French": "Je vais très bien", "English": "I am doing well" } } ]');
 
             function cppIsReady() {
                 console.log("initialize");
 
-                var now = Math.floor(Date.now() / 1000);
+                let now = Math.floor(Date.now() / 1000);
 
-                var correctReviewStreak = 0;
-                var difficultyRating = 100;
-                var reviewDate = "";
-                var previousCorrectReview = "";
-
-                // Call C from JavaScript
-                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                // Call C++ from JavaScript
+                for (let i = 0; i < globalFlashcardInput.length; i++) {
 
                     if (globalFlashcardInput[i]["Status"] == "NeverReviewed") {
                         Module.ccall("AddNeverReviewedCard", "void", [], []);
                     }
                     else {
-                        var item = globalFlashcardInput[i]["Status"][1];
+                        let item = globalFlashcardInput[i]["Status"][1];
 
                         switch (globalFlashcardInput[i]["Status"][0]) {
                             case "PreviouslyCorrect" :
-                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
-                                var previousCorrectDate = Date.parse(item["PreviousCorrectDate"]) / 1000;
-                                Module.ccall("AddPreviouslyCorrect", "void", ["number", "number", "number"], [ item["DifficultyRating"][1], reviewDate, previousCorrectDate ]);
-                                break;
+                                {
+                                    let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                    let previousCorrectDate = Date.parse(item["PreviousCorrectDate"]) / 1000;
+                                    Module.ccall("AddPreviouslyCorrect", "void", ["number", "number", "number"], [ 91, reviewDate, previousCorrectDate ]);
+                                    break;
+                                }
                             case "PreviouslyIncorrect" :
-                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
-                                Module.ccall("AddPreviouslyIncorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
-                                break;
+                                {
+                                    let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                    Module.ccall("AddPreviouslyIncorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
+                                    break;
+                                }
                             case "PreviouslyFirstCorrect" :
-                                var reviewDate = Date.parse(item['ReviewDate']) / 1000;
-                                Module.ccall("AddPreviouslyFirstCorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
-                                break;
+                                {
+                                    let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                                    Module.ccall("AddPreviouslyFirstCorrect", "void", ["number", "number"], [item["DifficultyRating"][1], reviewDate ]);
+                                    break;
+                                }
                         }
                     }
                 }
 
-                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                for (let i = 0; i < globalFlashcardInput.length; i++) {
                     console.log("downloading " + i);
                     // -- update the c++ data...
                     Module.ccall('Download',
@@ -229,14 +232,14 @@
                         [i]); // arguments
                 }
 
-                var index = Module.ccall('Next',
+                let index = Module.ccall('Next',
                     'number', // return type
                     ['number'], // argument types
                     [now]); // arguments
 
                 console.log('index ' + index + ' perfect setting...');
 
-                var _ = Module.ccall('SetOutcome',
+                Module.ccall('SetOutcome',
                     'number',
                     ['number', 'number', 'number'],
                     [index, 3, now]);
@@ -248,7 +251,7 @@
 
                 console.log('index ' + index + ' hesitate setting...');
 
-                var _ = Module.ccall('SetOutcome',
+                Module.ccall('SetOutcome',
                     'number',
                     ['number', 'number', 'number'],
                     [index, 2, now]);                    
@@ -260,7 +263,7 @@
 
                 console.log('index ' + index + ' end of session...');
 
-                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                for (let i = 0; i < globalFlashcardInput.length; i++) {
                     console.log("downloading " + i);
                     // -- update the c++ data...
                     Module.ccall('Download',
@@ -269,7 +272,7 @@
                         [i]); // arguments
                 }
 
-                for (var i = 0; i < globalFlashcardInput.length; i++) {
+                for (let i = 0; i < globalFlashcardInput.length; i++) {
                     console.log('getting reporting' + i);
                     Module.ccall('GetNextTime',
                         'void',
@@ -279,6 +282,11 @@
 
                 console.log('done');
 
+                let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(globalFlashcardInput));
+                let dlAnchorElem = document.getElementById('download');
+                dlAnchorElem.setAttribute("href", dataStr);
+                dlAnchorElem.setAttribute("download", "flashcards.json");
+                dlAnchorElem.click();
             }
 
             function cppAddNeverReviewed(i) {
@@ -289,43 +297,41 @@
             function cppAddPreviouslyIncorrect(i, difficultyRating, reviewDate) {
                 console.log("cpp callback previously incorrect");
 
-                var item = {};
+                let item = {};
 
-                globalFlashcardInput[i]["Status"] = "PreviouslyIncorrect";
                 item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
                 item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
-                globalFlashcardInput[i]["Status"][1] = item;
+                globalFlashcardInput[i]["Status"] = [ "PreviouslyIncorrect", item ];
             }
 
             function cppAddPreviouslyFirstCorrect(i,  difficultyRating, reviewDate) {
                 console.log("cpp callback previously first correct");
 
-                var item = {};
+                let item = {};
 
-                globalFlashcardInput[i]["Status"] = "PreviouslyFirstCorrect";
                 item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
                 item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
-                globalFlashcardInput[i]["Status"][1] = item;
+                globalFlashcardInput[i]["Status"] = [ "PreviouslyFirstCorrect", item ];
             }
 
             function cppAddPreviouslyCorrect(i, difficultyRating, reviewDate, previousCorrectDate) {
                 console.log("cpp callback previously correct");
 
-                var item = {};
+                let item = {};
 
-                globalFlashcardInput[i]["Status"] = "PreviouslyCorrect";
                 item.reviewDate = JSON.stringify(new Date(reviewDate * 1000));
                 item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
                 item.previousCorrectDate = JSON.stringify(new Date(previousCorrectDate * 1000));
-                globalFlashcardInput[i]["Status"][1] = item;
+                globalFlashcardInput[i]["Status"] = [ "PreviouslyCorrect", item ];
             }
 
             function cppGetNextTime(i, reviewDate) {
-                var d = new Date(reviewDate * 1000);
-                var timestamp = JSON.stringify(d);
+                let d = new Date(reviewDate * 1000);
+                let timestamp = JSON.stringify(d);
                 console.log("next time = " + i + " " + d.toString());
             }
             
         </script>
+        <a id="download">download</a>
     </body>
     </html>

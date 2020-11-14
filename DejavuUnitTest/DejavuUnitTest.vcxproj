@@ -158,6 +158,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dejavu\Dejavu.cpp" />
     <ClCompile Include="..\Dejavu\StudySession.cpp" />
     <ClCompile Include="..\Dejavu\SuperMemo2Strategy.cpp" />
     <ClCompile Include="DejavuUnitTest.cpp" />
