@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="utf-8">
+  <meta content="text/html; charset=utf-8" http-equiv=Content-Type>
+
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
   <meta name="author" content="">
@@ -19,11 +19,180 @@
   .list-group-item {
     background-color: #00000008;
   }
+  .emscripten {
+                padding-right: 0;
+                margin-left: auto;
+                margin-right: auto;
+                display: block
+            }
+
+  div.emscripten {
+      text-align: center
+  }
+
+  div.emscripten_border {
+      border: 1px solid #000
+  }
+
+  canvas.emscripten {
+      border: 0 none;
+      background-color: #000
+  }
+
+  #emscripten_logo {
+      display: inline-block;
+      margin: 0
+  }
+
+  .spinner {
+      height: 30px;
+      width: 30px;
+      margin: 0;
+      margin-top: 20px;
+      margin-left: 20px;
+      display: inline-block;
+      vertical-align: top;
+      -webkit-animation: rotation .8s linear infinite;
+      -moz-animation: rotation .8s linear infinite;
+      -o-animation: rotation .8s linear infinite;
+      animation: rotation .8s linear infinite;
+      border-left: 5px solid #ebebeb;
+      border-right: 5px solid #ebebeb;
+      border-bottom: 5px solid #ebebeb;
+      border-top: 5px solid #787878;
+      border-radius: 100%;
+      background-color: #bdd72e
+  }
+
+  @-webkit-keyframes rotation {
+      from {
+          -webkit-transform: rotate(0)
+      }
+
+      to {
+          -webkit-transform: rotate(360deg)
+      }
+  }
+
+  @-moz-keyframes rotation {
+      from {
+          -moz-transform: rotate(0)
+      }
+
+      to {
+          -moz-transform: rotate(360deg)
+      }
+  }
+
+  @-o-keyframes rotation {
+      from {
+          -o-transform: rotate(0)
+      }
+
+      to {
+          -o-transform: rotate(360deg)
+      }
+  }
+
+  @keyframes rotation {
+      from {
+          transform: rotate(0)
+      }
+
+      to {
+          transform: rotate(360deg)
+      }
+  }
+
+  #status {
+      display: inline-block;
+      vertical-align: top;
+      margin-top: 30px;
+      margin-left: 20px;
+      font-weight: 700;
+      color: #787878
+  }
+
+  #progress {
+      height: 20px;
+      width: 300px
+  }
+
+  #controls {
+      display: inline-block;
+      float: right;
+      vertical-align: top;
+      margin-top: 30px;
+      margin-right: 20px
+  }
+
+  #output {
+      width: 100%;
+      height: 200px;
+      margin: 0 auto;
+      margin-top: 10px;
+      border-left: 0;
+      border-right: 0;
+      padding-left: 0;
+      padding-right: 0;
+      display: block;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Lucida Console', Monaco, monospace;
+      outline: 0
+  }
+
+  .top-spacer {
+    margin-top: 30px;
+  }
   </style>
 </head>
 
 <body>
-
+  <div class=spinner id=spinner></div>
+  <div class=emscripten id=status>Downloading...</div>
+  <span id=controls></span>
+  <div class=emscripten><progress hidden id=progress max=100 value=0></progress></div>
+  <textarea class="d-none" id="output" rows="8"></textarea> 
+  <script>
+    var statusElement = document.getElementById("status"),
+        progressElement = document.getElementById("progress"),
+        spinnerElement = document.getElementById("spinner"),
+        Module = {
+            preRun: [],
+            postRun: [],
+            print: function() {
+                let e = document.getElementById("output");
+                return e && (e.value = ""),
+                    function(t) {
+                        arguments.length > 1 && (t = Array.prototype.slice.call(arguments).join(" ")), console.log(t), e && (e.value += t + "\n", e.scrollTop = e.scrollHeight)
+                    }
+            }(),
+            printErr: function(e) {
+                arguments.length > 1 && (e = Array.prototype.slice.call(arguments).join(" ")), console.error(e)
+            },
+            setStatus: function(e) {
+                if (Module.setStatus.last || (Module.setStatus.last = {
+                        time: Date.now(),
+                        text: ""
+                    }), e !== Module.setStatus.last.text) {
+                    let t = e.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/),
+                        n = Date.now();
+                    t && n - Module.setStatus.last.time < 30 || (Module.setStatus.last.time = n, Module.setStatus.last.text = e, t ? (e = t[1], progressElement.value = 100 * parseInt(t[2]), progressElement.max = 100 * parseInt(t[4]), progressElement.hidden = !1, spinnerElement.hidden = !1) : (progressElement.value = null, progressElement.max = null, progressElement.hidden = !0, e || (spinnerElement.style.display = "none")), statusElement.innerHTML = e)
+                }
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function(e) {
+                this.totalDependencies = Math.max(this.totalDependencies, e), Module.setStatus(e ? "Preparing... (" + (this.totalDependencies - e) + "/" + this.totalDependencies + ")" : "All downloads complete.")
+            }
+        };
+    Module.setStatus("Downloading..."), window.onerror = function(e) {
+        Module.setStatus("Exception thrown, see JavaScript console"), spinnerElement.style.display = "none", Module.setStatus = function(e) {
+            e && Module.printErr("[post-exception status] " + e)
+        }
+    }
+  </script>
+  <script async src=flashcard.js></script>
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
     <div class="container">
@@ -39,7 +208,7 @@
             <a class="nav-link" href="#" id="load">Load</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" download="vocab.json" id="vocabdown">Download</a>
+            <a class="nav-link" href="#" id="vocabdown">Download</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#" id="audiolink">Enable Audio (experimental)</a>
@@ -57,12 +226,12 @@
         <h2>to my C++ Demo</h2>
       </div>
       <div class="card-header">
-        <p>I ported a flashcard review scheduler to C++ and then cross compiled it to web assembly for this web page.
+        <p>This is an exercise in C++ and for French vocabulary building. A C# library spaced repetition flashcard scheduler was ported to C++ and then cross compiled to web assembly to run on this web page.
           The scheduler uses SuperMemo2 technology. Notice of use: Algorithm SM-2, Copyright SuperMemo World, 1991. 
           <a href="https://www.supermemo.com">https://www.supermemo.com</a> 
           <a href="https://www.supermemo.eu">https://www.supermemo.eu</a>
           The original C# code for the scheduler has an MIT license as is hosted on <a href="https://github.com/helephant/SpacedRepetition.Net">github</a>.
-          This is an exercise in C++ and for French vocabulary building. The interface uses vanilla javascript and bootstrap.
+          The interface uses vanilla javascript and bootstrap.
         </p>
       </div>
     </div>
@@ -71,7 +240,7 @@
 
   <!-- Flashcard Content -->
   <div class="container d-none" id="work">
-    <div class="card mb-4 shadow-sm">
+    <div class="card mb-4 shadow-sm top-spacer">
       <div class="text-center bg-text">
         <p id="French"></p> 
       </div>
@@ -89,61 +258,124 @@
         <div class="d-none" id="raterow">
           <ul class="list-group mb-3">
             <li class="list-group-item justify-content-between lh-condensed">
-              <a href="#" id="rate-1">Dunno</a>
+              <a href="#" id="rate-1">IDK</a>
             </li>
             <li class="list-group-item justify-content-between lh-condensed">
-              <a href="#" id="rate-2">Hesitate</a>
+              <a href="#" id="rate-2">Hesitated</a>
             </li>
             <li class="list-group-item justify-content-between lh-condensed">
-              <a href="#" id="rate-3">Ok</a>
+              <a href="#" id="rate-3">Good</a>
             </li>
           </ul>
         </div>
       </div>
     </div>
   </div>
-  
+
+  <!-- 3 Content -->
+  <div class="container d-none" id="downloadReport">
+    <table id="downloadReportTable" class="table">
+      <thead>
+        <tr>
+          <th scope="col">French</th>
+          <th scope="col">Next Review Date</th>
+          <th scope="col">Reset</th>    
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <a href="#" id="downloadFile">Download Flashcard Data</a>
+  </div>
+
   <input style="display:none" type="file" id="files" name="files[]" />
 
   <!-- Bootstrap core JavaScript -->
   <script src="vendor/jquery/jquery.slim.min.js"></script>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
+  
   <script>
     // Check for the various File API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       // Great success! All the File APIs are supported.
     } else {
-      alert('The File APIs are not fully supported in this browser.');
+      alert('This browser does not support this website. Latest chrome browser should work.');
     }
   </script>
 
   <script>
-    var globalFlashcardInput = "";
+    'use strict';
+
+    var globalFlashcardInput = { };
+    var globalReviewDates = [ ];
     var globalAudioToggle = false;
     var audioCard = null;
     var globalCardIndex = 0;
     var globalCardShowState = 0;
 
+    function cppIsReady() {
+        document.getElementById("status").style.display = "none";
+        document.getElementById("progress").style.display ="none";
+        document.getElementById("spinner").style.display = "none";
+        document.getElementById("controls").style.display = "none";
+    }
+
+    function cppAddNeverReviewed(i) {
+        globalFlashcardInput[i]["Status"] = "NeverReviewed";
+    }
+
+    function cppAddPreviouslyIncorrect(i, difficultyRating, reviewDate) {
+        let item = {};
+
+        item.ReviewDate = new Date(reviewDate * 1000);
+        item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
+        globalFlashcardInput[i]["Status"] = [ "PreviouslyIncorrect", item ];
+    }
+
+    function cppAddPreviouslyFirstCorrect(i,  difficultyRating, reviewDate) {
+        let item = {};
+
+        item.ReviewDate = new Date(reviewDate * 1000);
+        item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
+        globalFlashcardInput[i]["Status"] = [ "PreviouslyFirstCorrect", item ];
+    }
+
+    function cppAddPreviouslyCorrect(i, difficultyRating, reviewDate, previousCorrectDate) {
+        let item = {};
+
+        item.ReviewDate = new Date(reviewDate * 1000);
+        item["DifficultyRating"] = [ "DifficultyRating", difficultyRating ];
+        item.PreviousCorrectDate = new Date(previousCorrectDate * 1000);
+        globalFlashcardInput[i]["Status"] = [ "PreviouslyCorrect", item ];
+    }
+
+    function cppGetNextTime(i, reviewDate) {
+        globalReviewDates[i] = new Date(reviewDate * 1000);
+    }    
+
     function handleFileSelect(evt) {
-      var files = evt.target.files; // FileList object
+      let fileInput = document.getElementById("files");      
+      let file = fileInput.files[0];
 
-      // Loop through the FileList and render image files as thumbnails.
-      for (var i = 0, f; f = files[i]; i++) {
+			let reader = new FileReader();
 
-        var reader = new FileReader();
+		  reader.onload = function(e) {
+        globalFlashcardInput = JSON.parse(reader.result);
+        // -- clear so will  trigger onchange when reload same file...
+        file = {};
+        beginSession();
+			}
 
-        // Closure to capture the file information.
-        reader.onload = (function(theFile) {
-          return function(e) {
-            globalFlashcardInput = JSON.parse(e.target.result);
-            beginSession();
-          };
-        })(f);
-
-        // Read in the image file as a data URL.
-        reader.readAsText(f);
+      if (file) {
+			  reader.readAsText(file);
       }
+    }
+
+    function handleFileSelectReload(evt) {
+      alert(evt);
     }
 
     function setFlashCardData(language) {
@@ -160,19 +392,131 @@
     }
 
     function rate(outcome) {
+      // -- update view...
       document.getElementById("raterow").classList.add("d-none");
       document.getElementById("turnrow").classList.remove("d-none");
       document.getElementById("englishrow").classList.remove("bg-text");
       document.getElementById("englishrow").classList.add("card-header");
-      globalCardIndex = (globalCardIndex + 1) % globalFlashcardInput.length;
-      setFlashCardData("French");
+
+      let now = Math.floor(Date.now() / 1000);
+
+      // -- update session...
+      _SetOutcome(globalCardIndex, outcome, now);
+
+      // -- update next card...
+      globalCardIndex = _Next(now); // arguments
+
+      if (globalCardIndex === -1) {
+        endSession();
+      }
+      else {
+        setFlashCardData("French");
+      }
     }
 
     function beginSession() {
+      // -- switch to next view...
       document.getElementById("welcome").classList.add("d-none"); 
+      document.getElementById("downloadReport").classList.add("d-none");
       document.getElementById("work").classList.remove("d-none");
+      
       globalCardIndex = 0; 
+      
+      let flashcards = globalFlashcardInput;
+
+      // Call C++ from JavaScript
+      _Reset();
+
+      for (let i = 0; i < flashcards.length; i++) {
+        if (flashcards[i]["Status"] == "NeverReviewed") {
+            _AddNeverReviewedCard();
+        }
+        else {
+          let item = flashcards[i]["Status"][1];
+
+          switch (flashcards[i]["Status"][0]) {
+              case "PreviouslyCorrect" : {
+                  let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                  let previousCorrectDate = (Date.parse(item["PreviousCorrectDate"]) / 1000).toFixed(0);
+                  _AddPreviouslyCorrect(item["DifficultyRating"][1], reviewDate, previousCorrectDate);
+                  break;
+              }
+              case "PreviouslyIncorrect" : {
+                  let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                  _AddPreviouslyIncorrect(item["DifficultyRating"][1], reviewDate);
+                  break;
+              }
+            case "PreviouslyFirstCorrect" : {
+                let reviewDate = Date.parse(item['ReviewDate']) / 1000;
+                _AddPreviouslyFirstCorrect(item["DifficultyRating"][1], reviewDate);
+                break;
+              }
+          }
+        }
+      }
       setFlashCardData("French");
+    }
+
+    function forgotButtonHandler(event) {
+      event = event || window.event;
+      let target = event.target || event.srcElement;
+
+      cppAddNeverReviewed(target.cardIndex);
+
+      target.setAttribute("disabled", "");
+    }
+
+    function endSession() {
+      // -- switch to last view
+      document.getElementById("welcome").classList.add("d-none"); 
+      document.getElementById("work").classList.add("d-none");
+      document.getElementById("downloadReport").classList.remove("d-none");
+
+      let flashcards = globalFlashcardInput;
+      let now = Math.floor(Date.now() / 1000);
+
+      for (let i = 0; i < flashcards.length; i++) {
+          // -- get the c++ data...
+          _Download(i); // arguments
+          _GetNextTime(i, now);            
+      }
+
+      // -- populate the table...
+      let table = document.getElementById("downloadReportTable");
+      let oldTableBody = table.getElementsByTagName('tbody')[0];
+      var tableBody = document.createElement('tbody');
+
+      for (let i = 0; i < flashcards.length; i++) {
+        var tdFrench = document.createElement("td");
+        var tdDate = document.createElement("td");
+        var tdReset = document.createElement("td");
+        var tr = document.createElement("tr");
+        var resetButton = document.createElement("button");
+
+        resetButton.innerHTML = "Forgotten";
+        resetButton.classList.add("btn");
+        resetButton.classList.add("btn-primary");
+        resetButton.classList.add("btn-block");
+        resetButton.cardIndex = i;
+        resetButton.addEventListener("click", forgotButtonHandler);
+
+        tdFrench.appendChild(document.createTextNode(globalFlashcardInput[i]["Item"]["French"]));
+        tdDate.appendChild(document.createTextNode(globalReviewDates[i].toDateString()));
+        tdReset.appendChild(resetButton);
+        tr.appendChild(tdFrench);
+        tr.appendChild(tdDate);
+        tr.appendChild(tdReset);
+        tableBody.appendChild(tr);
+      } 
+
+      oldTableBody.parentNode.replaceChild(tableBody, oldTableBody);
+    }
+
+    function downloadFile() {
+      let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(globalFlashcardInput));
+      let dlAnchorElem = document.getElementById('downloadFile');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", "flashcards.json");
     }
 
     function turnover(ev) {
@@ -222,27 +566,22 @@
       }      
     }
 
-    document.getElementById("vocabdown").addEventListener("click",
-      function(ev) {
-        this.href = 
-          window.URL.createObjectURL(
-          new Blob([globalFlashcardInput], { type: "text/plain" })
-        );
-      });
+    document.getElementById("files").addEventListener("change", handleFileSelect);
+
+    document.getElementById("vocabdown").addEventListener("click", endSession);
 
     document.getElementById("reset").addEventListener("click", 
       function(ev) {
         location.reload();
       });
 
-    document.getElementById('files').addEventListener("change", 
-      handleFileSelect, false);
-
     document.getElementById('load').addEventListener("click", 
       function(ev) {
         document.getElementById('files').click();
       });
-      
+    
+    document.getElementById('downloadFile').addEventListener("click", downloadFile);
+
     document.getElementById("audiolink").addEventListener("click", 
       function(ev) {
         globalAudioToggle = !globalAudioToggle;
@@ -266,7 +605,7 @@
 
     document.getElementById("demo").addEventListener("click",
       function(ev) {
-        globalFlashcardInput = JSON.parse('[ { "Status": "NeverReviewed", "Item": { "French": "Nous avons vu la pleine puissance de l’outil digital", "English": "We have seen the full power of the digital tool" } }, { "Status": "NeverReviewed", "Item": { "French": "Google Pixel 5: moins haut de gamme, plus abordable", "English": "Google Pixel 5: less upscale, more affordable" } }, { "Status": "NeverReviewed", "Item": { "French": "Je vais très bien", "English": "I am doing well" } } ]');
+        globalFlashcardInput = JSON.parse('[ { "Status": "NeverReviewed", "Item": { "French": "Nous avons vu la pleine puissance de l’outil digital", "English": "We have seen the full power of the digital tool" } }, { "Status": "NeverReviewed", "Item": { "French": "Google Pixel 5: moins haut de gamme, plus abordable", "English": "Google Pixel 5: less upscale, more affordable" } }, { "Status": [ "PreviouslyFirstCorrect", { "ReviewDate": "2020-09-19T04:47:52.0414741Z", "DifficultyRating": [ "DifficultyRating", 91 ] } ], "Item": { "French": "Je vais très bien", "English": "I am doing well" } }, { "Status": [ "PreviouslyCorrect", { "ReviewDate": "2020-09-19T04:48:01.2871718Z", "PreviousCorrectDate": "2020-09-08T18:51:50.8638795Z", "DifficultyRating": [ "DifficultyRating", 73 ] } ], "Item": { "French": "5 points clefs à savoir", "English": "5 key points to know" } } ]');
         beginSession();
     });
 

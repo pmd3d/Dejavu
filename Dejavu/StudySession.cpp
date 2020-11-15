@@ -32,6 +32,15 @@ StudySession::StudySession(const IReviewStrategy& reviewStrategy, uint maxNewCar
 {
 }
 
+void StudySession::Reset()
+{
+    _cards.clear();
+    _visit.clear();
+    _newCardsReturned = 0;
+    _existingCardsReturned = 0;
+    _currentIndex = 0;
+}
+
 void StudySession::AddNeverReviewed()
 {
     // -- this seems kind of a problem. Not sure how to start it off if it has no history.

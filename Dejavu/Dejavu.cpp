@@ -41,8 +41,8 @@ struct DownloadHelper
     }
     void operator()(PreviouslyIncorrect p)
     {
-        auto param0 = p.difficultyRating;
-        auto param1 = p.reviewDate;
+        int param0 = p.difficultyRating;
+        int param1 = p.reviewDate;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -56,8 +56,8 @@ struct DownloadHelper
     }
     void operator()(PreviouslyFirstCorrect p)
     {
-        auto param0 = p.difficultyRating;
-        auto param1 = p.reviewDate;
+        int param0 = p.difficultyRating;
+        int param1 = p.reviewDate;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -71,9 +71,9 @@ struct DownloadHelper
     }
     void operator()(PreviouslyCorrect p)
     {
-        auto param0 = p.difficultyRating;
-        auto param1 = p.reviewDate;
-        auto param2 = p.previousCorrectReview;
+        int param0 = p.difficultyRating;
+        int param1 = p.reviewDate;
+        int param2 = p.previousCorrectReview;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -126,7 +126,7 @@ extern "C" {
         session().AddNeverReviewed();
     }
 
-    void AddPreviouslyIncorrect(int difficultyRatingJs, i64 reviewDateJs)
+    void AddPreviouslyIncorrect(int difficultyRatingJs, int reviewDateJs)
     {
         Timestamp reviewDate;
         DifficultyRating difficultyRating;
@@ -137,7 +137,7 @@ extern "C" {
         session().AddPreviouslyIncorrect(difficultyRating, reviewDate);
     }
 
-    void AddPreviouslyFirstCorrect(int difficultyRatingJs, i64 reviewDateJs)
+    void AddPreviouslyFirstCorrect(int difficultyRatingJs, int reviewDateJs)
     {
         Timestamp reviewDate;
         uint difficultyRating;
@@ -148,9 +148,9 @@ extern "C" {
         session().AddPreviouslyFirstCorrect(difficultyRating, reviewDate);
     }
 
-    void AddPreviouslyCorrect(int difficultyRatingJs, i64 reviewDateJs, i64 previousCorrectReviewJs)
+    void AddPreviouslyCorrect(int difficultyRatingJs, int reviewDateJs, int previousCorrectReviewJs)
     {
-        if (previousCorrectReviewJs < 0)
+        if (previousCorrectReviewJs <= 0)
             exit(1);
 
         Timestamp reviewDate;
@@ -161,10 +161,10 @@ extern "C" {
 
         Timestamp previousCorrectReview = static_cast<Timestamp>(previousCorrectReviewJs);
 
-        session().AddPreviouslyCorrect(difficultyRating, reviewDate, previousCorrectReview);
+        session().AddPreviouslyCorrect(difficultyRating, reviewDate, previousCorrectReviewJs);
     }
 
-    void SetOutcome(int iJs, int userState, i64 nowJs)
+    void SetOutcome(int iJs, int userState, int nowJs)
     {
         uint i = ConvertIndex(iJs);
         uint now = ConvertNow(nowJs);
@@ -197,7 +197,7 @@ extern "C" {
         session().UpdateCard(i, outcome, now);
     }
 
-    int Next(i64 nowJs)
+    int Next(int nowJs)
     {
         uint now = ConvertNow(nowJs);
 
@@ -211,7 +211,7 @@ extern "C" {
         std::visit(DownloadHelper{ i }, session().At(i));
     }
 
-    void GetNextTime(int iJs, i64 nowJs)
+    void GetNextTime(int iJs, int nowJs)
     {
         uint i = ConvertIndex(iJs);
         uint now = ConvertNow(nowJs);
@@ -226,6 +226,11 @@ extern "C" {
             time
         );
 #endif
+    }
+
+    void Reset()
+    {
+        session().Reset();
     }
 }
 

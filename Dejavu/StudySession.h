@@ -39,6 +39,7 @@ namespace jlimdev {
         std::optional<uint> NextReview(Timestamp now);
         void AddItem(const ReviewItem& item);
         uint GetNextReviewTime(uint i, uint now);
+        void Reset();
     private:
         ReviewItem MapItem(uint i, const ReviewOutcome& outcome, Timestamp now);
         bool IsDue(const ReviewItem& item, const Timestamp& now) const;

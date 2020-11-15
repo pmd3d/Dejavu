@@ -344,12 +344,5 @@ namespace FlashcardUnitTest
         {
             return count * 24 * 60 * 60;
         }
-
-        TEST_METHOD(js_bridge_add_card_should_return)
-        {
-            AddPreviouslyCorrect(91, 1601655647, 1601095676);
-
-            Assert::IsTrue(true);
-        }
     };
 }
