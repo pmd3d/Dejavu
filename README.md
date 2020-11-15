@@ -1,5 +1,5 @@
 # Dejavu
-# Vocab Spaced Repetition C++ Demo
+# French Vocab Spaced Repetition C++ Demo
 
 published at:
 https://pmd3d.github.io
