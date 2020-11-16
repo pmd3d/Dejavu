@@ -550,6 +550,9 @@
         if (voice) return voice;
         voice = speechSynthesis.getVoices().filter((voice) => voice.name === 'Amelie')[0];
         if (voice) return voice;
+        // anything else french
+        voice = speechSynthesis.getVoices().filter((voice) => voice.lang === 'fr-FR')[0];
+        if (voice) return voice;
 
         this._hasSpeechSynthesis = false;
       }
