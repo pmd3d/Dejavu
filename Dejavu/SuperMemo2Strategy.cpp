@@ -72,6 +72,7 @@ double SuperMemo2ReviewStrategy::DifficultyRatingToEasinessFactor(uint difficult
 
 double SuperMemo2ReviewStrategy::ConvertOutcomeToNumber(const ReviewOutcome& reviewOutcome) noexcept
 {
+    // try case statement here again...
     double outcome = 0.0;
     if (reviewOutcome == ReviewOutcome::Perfect)
     {
