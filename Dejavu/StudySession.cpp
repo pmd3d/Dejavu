@@ -9,18 +9,22 @@ struct ReviewItemAfterCorrect
 
     ReviewItem operator()(const NeverReviewed& n)
     {
+        // try std::move
         return PreviouslyFirstCorrect{ difficultyRating, now };
     }
     ReviewItem operator()(const PreviouslyIncorrect& p)
     {
+        // try std::move
         return PreviouslyFirstCorrect{ difficultyRating, now };
     }
     ReviewItem operator()(const PreviouslyFirstCorrect& p)
     {
+        // try std::move        
         return PreviouslyCorrect{ difficultyRating, now, p.reviewDate };
     }
     ReviewItem operator()(const PreviouslyCorrect& p)
     {
+        // try std::move        
         return PreviouslyCorrect{ difficultyRating, now, p.reviewDate };
     }
 };
@@ -89,6 +93,7 @@ std::optional<uint> StudySession::NextReview(Timestamp now)
     for (uint iCount = 0; iCount < _cards.size(); iCount++)
     {
         // cycle through the entire vector starting from current index...
+        // try const i
         uint i = (_currentIndex + iCount) % _cards.size();
         const uint nextI = (i + 1) % _cards.size();
 
@@ -138,7 +143,8 @@ ReviewItem StudySession::MapItem(uint i, const ReviewOutcome& outcome, Timestamp
     if (outcome == ReviewOutcome::Incorrect)
     {
         _visit.at(i) = ReviewState::Wrong;
-
+        
+        // try std::move
         return PreviouslyIncorrect{ difficultyRating, now };
     }
     else
