@@ -2,6 +2,7 @@
 
 using namespace jlimdev;
 
+// pattern match card state to schedule the next impression time...
 struct NextReviewSuperMemo2Visitor
 {
     Timestamp now;
@@ -72,24 +73,32 @@ double SuperMemo2ReviewStrategy::DifficultyRatingToEasinessFactor(uint difficult
 
 double SuperMemo2ReviewStrategy::ConvertOutcomeToNumber(const ReviewOutcome& reviewOutcome) noexcept
 {
-    // try case statement here again...
     double outcome = 0.0;
-    if (reviewOutcome == ReviewOutcome::Perfect)
+
+    switch (reviewOutcome)
+    {
+    case ReviewOutcome::Perfect:
     {
         outcome = 3.0;
+        break;
     }
-    else if (reviewOutcome == ReviewOutcome::Hesitant)
+    case ReviewOutcome::Hesitant:
     {
         outcome = 2.0;
+        break;
     }
-    else if (reviewOutcome == ReviewOutcome::Incorrect)
+    case ReviewOutcome::Incorrect:
     {
         outcome = 1.0;
+        break;
     }
-    else if (reviewOutcome == ReviewOutcome::NeverReviewed)
+    case ReviewOutcome::NeverReviewed:
     {
         outcome = 0.0;
+        break;
     }
+    }
+
     return outcome;
 }
 

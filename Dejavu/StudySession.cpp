@@ -2,6 +2,7 @@
 
 using namespace jlimdev;
 
+// -- pattern match next review item state...
 struct ReviewItemAfterCorrect
 {
     Timestamp now;
@@ -9,23 +10,19 @@ struct ReviewItemAfterCorrect
 
     ReviewItem operator()(const NeverReviewed& n)
     {
-        // try std::move
-        return PreviouslyFirstCorrect{ difficultyRating, now };
+        return std::move(PreviouslyFirstCorrect{ difficultyRating, now });
     }
     ReviewItem operator()(const PreviouslyIncorrect& p)
     {
-        // try std::move
-        return PreviouslyFirstCorrect{ difficultyRating, now };
+        return std::move(PreviouslyFirstCorrect{ difficultyRating, now });
     }
     ReviewItem operator()(const PreviouslyFirstCorrect& p)
     {
-        // try std::move        
-        return PreviouslyCorrect{ difficultyRating, now, p.reviewDate };
+        return std::move(PreviouslyCorrect{ difficultyRating, now, p.reviewDate });
     }
     ReviewItem operator()(const PreviouslyCorrect& p)
     {
-        // try std::move        
-        return PreviouslyCorrect{ difficultyRating, now, p.reviewDate };
+        return std::move(PreviouslyCorrect{ difficultyRating, now, p.reviewDate });
     }
 };
 
@@ -93,8 +90,7 @@ std::optional<uint> StudySession::NextReview(Timestamp now)
     for (uint iCount = 0; iCount < _cards.size(); iCount++)
     {
         // cycle through the entire vector starting from current index...
-        // try const i
-        uint i = (_currentIndex + iCount) % _cards.size();
+        const uint i = (_currentIndex + iCount) % _cards.size();
         const uint nextI = (i + 1) % _cards.size();
 
         if (_visit.at(i) == ReviewState::Wrong)
@@ -135,6 +131,7 @@ void StudySession::AddItem(const ReviewItem& item)
     _visit.emplace_back(ReviewState::Unvisited);
 }
 
+// -- make next state transition by using user response and pattern matching on current card...
 ReviewItem StudySession::MapItem(uint i, const ReviewOutcome& outcome, Timestamp now)
 {
     const ReviewItem& item = _cards.at(i);
@@ -144,8 +141,7 @@ ReviewItem StudySession::MapItem(uint i, const ReviewOutcome& outcome, Timestamp
     {
         _visit.at(i) = ReviewState::Wrong;
         
-        // try std::move
-        return PreviouslyIncorrect{ difficultyRating, now };
+        return std::move(PreviouslyIncorrect{ difficultyRating, now });
     }
     else
     {

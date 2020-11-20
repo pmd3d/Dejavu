@@ -41,8 +41,8 @@ struct DownloadHelper
     }
     void operator()(PreviouslyIncorrect p)
     {
-        int param0 = p.difficultyRating;
-        int param1 = p.reviewDate;
+        const int param0 = p.difficultyRating;
+        const int param1 = p.reviewDate;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -56,8 +56,8 @@ struct DownloadHelper
     }
     void operator()(PreviouslyFirstCorrect p)
     {
-        int param0 = p.difficultyRating;
-        int param1 = p.reviewDate;
+        const int param0 = p.difficultyRating;
+        const int param1 = p.reviewDate;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -71,9 +71,9 @@ struct DownloadHelper
     }
     void operator()(PreviouslyCorrect p)
     {
-        int param0 = p.difficultyRating;
-        int param1 = p.reviewDate;
-        int param2 = p.previousCorrectReview;
+        const int param0 = p.difficultyRating;
+        const int param1 = p.reviewDate;
+        const int param2 = p.previousCorrectReview;
 
 #if __EMSCRIPTEN__
         EM_ASM(
@@ -159,15 +159,15 @@ extern "C" {
         ConvertDifficultyRatingAndReviewDate(difficultyRatingJs, reviewDateJs,
             difficultyRating, reviewDate);
 
-        Timestamp previousCorrectReview = static_cast<Timestamp>(previousCorrectReviewJs);
+        const Timestamp previousCorrectReview = static_cast<Timestamp>(previousCorrectReviewJs);
 
         session().AddPreviouslyCorrect(difficultyRating, reviewDate, previousCorrectReviewJs);
     }
 
     void SetOutcome(int iJs, int userState, int nowJs)
     {
-        uint i = ConvertIndex(iJs);
-        uint now = ConvertNow(nowJs);
+        const uint i = ConvertIndex(iJs);
+        const uint now = ConvertNow(nowJs);
 
         ReviewOutcome outcome = ReviewOutcome::Incorrect;
 
@@ -199,22 +199,22 @@ extern "C" {
 
     int Next(int nowJs)
     {
-        uint now = ConvertNow(nowJs);
+        const uint now = ConvertNow(nowJs);
 
         return session().NextReview(now).value_or(-1);
     }
 
     void Download(int iJs)
     {
-        uint i = ConvertIndex(iJs);
+        const uint i = ConvertIndex(iJs);
 
         std::visit(DownloadHelper{ i }, session().At(i));
     }
 
     void GetNextTime(int iJs, int nowJs)
     {
-        uint i = ConvertIndex(iJs);
-        uint now = ConvertNow(nowJs);
+        const uint i = ConvertIndex(iJs);
+        const uint now = ConvertNow(nowJs);
 
         auto time = session().GetNextReviewTime(i, now);
 
