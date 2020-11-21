@@ -2,7 +2,7 @@
 
 using namespace jlimdev;
 
-// pattern match card state to schedule the next impression time...
+// pattern match variant to schedule the next impression time...
 struct NextReviewSuperMemo2Visitor
 {
     Timestamp now;
@@ -71,6 +71,7 @@ double SuperMemo2ReviewStrategy::DifficultyRatingToEasinessFactor(uint difficult
     return (-0.012 * difficultyRating) + 2.5;
 }
 
+// convert enum class to number for formula
 double SuperMemo2ReviewStrategy::ConvertOutcomeToNumber(const ReviewOutcome& reviewOutcome) noexcept
 {
     double outcome = 0.0;

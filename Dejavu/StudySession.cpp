@@ -2,7 +2,7 @@
 
 using namespace jlimdev;
 
-// -- pattern match next review item state...
+// -- pattern match next review item variant...
 struct ReviewItemAfterCorrect
 {
     Timestamp now;
@@ -83,6 +83,7 @@ ReviewItem& StudySession::At(uint i)
     return _cards.at(i);
 }
 
+// returns optional of index of next card or null option if done
 std::optional<uint> StudySession::NextReview(Timestamp now)
 {
     // -- finda card to review
