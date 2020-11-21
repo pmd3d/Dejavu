@@ -18,7 +18,7 @@ struct NextReviewSuperMemo2Visitor
     Timestamp operator()(const PreviouslyFirstCorrect& p)
     {
         // -- add 6 days...
-        return now + 6 * 24 * 60 * 60;
+        return p.reviewDate + 6 * 24 * 60 * 60;
     }
     Timestamp operator()(const PreviouslyCorrect& p)
     {
@@ -27,9 +27,8 @@ struct NextReviewSuperMemo2Visitor
         const Timestamp daysSincePreviousReview = seconds / (24 * 60 * 60);
         const Timestamp daysUntilNextReview = static_cast<int>((daysSincePreviousReview - 1) * easinessFactor);
 
-        return now + daysUntilNextReview * 24 * 60 * 60;
+        return p.reviewDate + daysUntilNextReview * 24 * 60 * 60;
     }
-
 };
 
 Timestamp SuperMemo2ReviewStrategy::NextReview(const ReviewItem& item, const Timestamp& now) const noexcept
