@@ -419,9 +419,7 @@
       document.getElementById("welcome").classList.add("d-none"); 
       document.getElementById("downloadReport").classList.add("d-none");
       document.getElementById("work").classList.remove("d-none");
-      
-      globalCardIndex = 0; 
-      
+            
       let flashcards = globalFlashcardInput;
 
       // Call C++ from JavaScript
@@ -452,9 +450,19 @@
                 break;
               }
           }
-        }
+        }          
       }
-      setFlashCardData("French");
+
+      let now = Math.floor(Date.now() / 1000);
+
+      globalCardIndex = _Next(now); 
+
+      if (globalCardIndex < 0) {
+        endSession();
+      }
+      else {
+        setFlashCardData("French");
+      }
     }
 
     function forgotButtonHandler(event) {
