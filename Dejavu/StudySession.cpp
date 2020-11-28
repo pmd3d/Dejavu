@@ -73,12 +73,12 @@ uint StudySession::UpdateCard(uint i, const ReviewOutcome& outcome, uint now)
     return GetNextReviewTime(i, now);
 }
 
-uint StudySession::GetNextReviewTime(uint i, uint now)
+uint StudySession::GetNextReviewTime(uint i, uint now) const
 {
     return _reviewStrategy.NextReview(_cards.at(i), now);
 }
 
-ReviewItem& StudySession::At(uint i)
+const ReviewItem& StudySession::At(uint i) const
 {
     return _cards.at(i);
 }

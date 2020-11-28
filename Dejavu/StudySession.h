@@ -35,10 +35,10 @@ namespace jlimdev {
         void AddPreviouslyFirstCorrect(uint difficultyRating, Timestamp reviewDate);
         void AddPreviouslyCorrect(uint difficultyRating, Timestamp reviewDate, Timestamp previousCorrectReview);
         uint UpdateCard(uint i, const ReviewOutcome& outcome, uint now);
-        ReviewItem& At(uint i);
+        const ReviewItem& At(uint i) const;
         std::optional<uint> NextReview(Timestamp now);
         void AddItem(const ReviewItem& item);
-        uint GetNextReviewTime(uint i, uint now);
+        uint GetNextReviewTime(uint i, uint now) const;
         void Reset();
     private:
         ReviewItem MapItem(uint i, const ReviewOutcome& outcome, Timestamp now);
